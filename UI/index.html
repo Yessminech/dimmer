@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Light Control Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        h2 { 
+            font-size: 2rem; 
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p { 
+            font-size: 1.5rem; 
+            color: #555;
+        }
+        .slider {
+            width: 100%;
+            height: 25px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+        }
+        .slider::-webkit-slider-thumb {
+            width: 35px;
+            height: 35px;
+            background: #333;
+            cursor: pointer;
+            border-radius: 50%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .profile-button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 5px;
+        }
+        /* Toggle Button CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            background-color: #c0ddf5;
+            border-radius: 17px;
+            transition: background-color 0.3s ease;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.4s ease;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Light Control Interface</h2>
+    
+    <p>Lamp 1 Brightness: <span id="textSliderValue1">0</span></p>
+    <input type="range" id="pwmSlider1" min="0" max="100" value="0" class="slider" oninput="updateSliderPWM(1, this)">
+    
+    <p>Lamp 2 Brightness: <span id="textSliderValue2">0</span></p>
+    <input type="range" id="pwmSlider2" min="0" max="100" value="0" class="slider" oninput="updateSliderPWM(2, this)">
+    
+    <p>Lamp 3 Brightness: <span id="textSliderValue3">0</span></p>
+    <input type="range" id="pwmSlider3" min="0" max="100" value="0" class="slider" oninput="updateSliderPWM(3, this)">
+
+    <!-- TODO: set default to 50% brightness -->
+    <p>Lamp 1: 
+        <label class="switch">
+            <input type="checkbox" id="lamp1Switch" onclick="toggleLamp(1); updateSliderPWM(1, document.getElementById('pwmSlider1').value = 0)">
+            <span class="slider"></span>
+        </label>
+    </p>
+    
+    <p>Lamp 2: 
+        <label class="switch">
+            <input type="checkbox" id="lamp2Switch" onclick="toggleLamp(2); updateSliderPWM(2, document.getElementById('pwmSlider2').value = 0)">
+            <span class="slider"></span>
+        </label>
+    </p>
+    
+    <p>Lamp 3: 
+        <label class="switch">
+            <input type="checkbox" id="lamp3Switch" onclick="toggleLamp(3); updateSliderPWM(3, document.getElementById('pwmSlider3').value = 0)">
+            <span class="slider"></span>
+        </label>
+    </p>
+
+    <p>Select a Profile:</p>
+    <button class="profile-button" onclick="setProfile('Profile 1')">Profile 1</button>
+    <button class="profile-button" onclick="setProfile('Profile 2')">Profile 2</button>
+    <button class="profile-button" onclick="setProfile('Profile 3')">Profile 3</button>
+
+    <script>
+        function updateSliderPWM(lamp, element) {
+            var sliderValue = element.value;
+            document.getElementById("textSliderValue" + lamp).innerHTML = sliderValue;
+            console.log("Simulating sending PWM value for Lamp " + lamp + ":", sliderValue);
+            fetch(`/brightness?lamp=${lamp}&value=${sliderValue}`);
+        }
+
+        function toggleLamp(lamp) {
+            console.log("Simulating lamp toggle");
+            fetch(`/toggle?lamp=${lamp}`);
+        }
+
+        function setProfile(profile) {
+            console.log("Simulating profile change:", profile);
+            fetch(`/profile?name=${profile}`);
+        }
+    </script>
+
+</body>
+</html>
