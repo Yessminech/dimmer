@@ -72,7 +72,7 @@ function generateLampControlHTML(lamp, lampName) {
                 <button class="btn btn-outline-secondary" onclick="increaseSliderValue(${lamp})">+</button>
                 <label class="switch ml-2" style="width: 70px;">
                     <input type="checkbox" id="lamp${lamp}Switch" class="toggle-switch" onclick="toggleLamp(${lamp})" ${isOn ? 'checked' : ''}>
-                    <span class="switch_slider round"></span>
+                    <span class="switch_slider"></span>
                 </label>
             </div>
             <div class="col-md-3 text-right">
