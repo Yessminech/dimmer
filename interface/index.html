@@ -193,6 +193,10 @@
                 lampsDropdown.add(option);
                 lampState[lampCounter] = { brightness: 100, isOn: true };
                 lampsDropdown.value = lampCounter;
+                // Save custom name to localStorage
+                const customNames = JSON.parse(localStorage.getItem('customLampNames')) || {};
+                customNames[lampCounter] = lampName;
+                localStorage.setItem('customLampNames', JSON.stringify(customNames));
                 displayLamp();
             }
         }
@@ -428,10 +432,12 @@
                 lampState = profiles[selectedProfile];
                 const lampsDropdown = document.getElementById('lamps');
                 lampsDropdown.innerHTML = '';
+                // Retrieve custom names from localStorage
+                const customNames = JSON.parse(localStorage.getItem('customLampNames')) || {};
                 Object.keys(lampState).forEach(lamp => {
                     const option = document.createElement('option');
                     option.value = lamp;
-                    option.text = lamp;
+                    option.text = customNames[lamp] || lamp; // Use custom name if available
                     lampsDropdown.add(option);
                 });
                 displayLamp();
