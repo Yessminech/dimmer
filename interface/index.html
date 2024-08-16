@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="en">
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Light Control Interface</title>
@@ -71,20 +72,22 @@
             border-radius: 50%;
         }
 
-        input:checked + .switch_slider {
+        input:checked+.switch_slider {
             background-color: var(--switch-checked-background);
         }
 
-        input:checked + .switch_slider:before {
+        input:checked+.switch_slider:before {
             transform: translateX(26px);
         }
 
         .narrow-select {
-            width: 950px; /* Adjust the width as needed */
+            width: 950px;
+            /* Adjust the width as needed */
         }
 
         .wide-select {
-            width: 1000px; /* Adjust the width as needed */
+            width: 1000px;
+            /* Adjust the width as needed */
         }
 
         .card {
@@ -106,10 +109,11 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2 class="my-4 text-center">Light Control Interface</h2>
-        
+
         <!-- Lamp Control Card -->
         <div class="card mb-4">
             <div class="card-body">
@@ -127,7 +131,7 @@
                 </div>
             </div>
         </div>
-    
+
         <!-- Saved Profile Card -->
         <div class="card mb-4">
             <div class="card-body">
@@ -147,16 +151,17 @@
                 </div>
             </div>
         </div>
-    
+
         <!-- Predefined Profile Card -->
         <div class="card mb-4">
             <div class="card-body">
                 <p class="card-text">Select a predefined Profile:</p>
                 <div class="d-flex mb-3">
-                    <select name="predefined_profiles" id="predefined_profiles" class="form-control mr-2" onchange="selectPredefinedProfile()"></select>
+                    <select name="predefined_profiles" id="predefined_profiles" class="form-control mr-2"
+                        onchange="selectPredefinedProfile()"></select>
                 </div>
                 <div class="d-flex justify-content-center mt-3">
-                    <button class="btn btn-secondary mx-2" onclick="reset()">Reload Profiles Lamps</button>
+                    <button class="btn btn-secondary mx-2" onclick="reloadProfiles()">Reload Profiles Lamps</button>
                 </div>
 
             </div>
@@ -168,6 +173,175 @@
         let lampState = {};
         let profiles = {};
         let predefined_profiles = {};
+
+        // Lamps control functions //
+
+        // Add a new lamp to the list
+        function addLamp() {
+            const lampName = prompt("Enter the name of the lamp:");
+            if (lampName) {
+                const lampsDropdown = document.getElementById('lamps');
+                const existingLamp = Array.from(lampsDropdown.options).find(option => option.text === lampName);
+                if (existingLamp) {
+                    alert("Lamp name already exists. Please choose a different name.");
+                    return;
+                }
+                lampCounter++;
+                const option = document.createElement('option');
+                option.value = lampCounter;
+                option.text = lampName;
+                lampsDropdown.add(option);
+                lampState[lampCounter] = { brightness: 100, isOn: true };
+                lampsDropdown.value = lampCounter;
+                displayLamp();
+            }
+        }
+
+        // Remove the selected lamp from the list
+        function removeLamp(lamp) {
+            const lampControl = document.getElementById(`lampControl${lamp}`);
+            if (lampControl) {
+                lampControl.remove();
+            }
+            const lampsDropdown = document.getElementById('lamps');
+            for (let i = 0; i < lampsDropdown.options.length; i++) {
+                const option = lampsDropdown.options[i];
+                if (option.value === lamp.toString()) {
+                    option.selected = false;
+                    lampsDropdown.remove(i);
+                    break;
+                }
+            }
+            delete lampState[lamp];
+            displayLamp();
+        }
+
+        // Remove all lamps 
+        function removeAllLamps() {
+            const lampsDropdown = document.getElementById('lamps');
+            lampsDropdown.innerHTML = '';
+            for (const lamp in lampState) {
+                const lampControl = document.getElementById(`lampControl${lamp}`);
+                if (lampControl) {
+                    lampControl.remove();
+                }
+            }
+            lampState = {};
+
+        }
+
+        // Reset all lamps to 100% brightness
+        function reset() {
+            Object.keys(lampState).forEach(lamp => {
+                lampState[lamp].brightness = 100;
+                const slider = document.getElementById(`pwmSlider${lamp}`);
+                if (slider) {
+                    slider.value = 100;
+                    document.getElementById(`textSliderValue${lamp}`).innerText = 100;
+                }
+                fetch(`/brightness?lamp=${lamp}&value=100`);
+                lampState[lamp].isOn = true;
+                const switchElement = document.getElementById(`lamp${lamp}Switch`);
+                if (switchElement) {
+                    switchElement.checked = true;
+                }
+                fetch(`/toggle?lamp=${lamp}&value=100`);
+            });
+        }
+
+        // Display the selected lamps with brightness control
+        function displayLamp() {
+            const selectedLamps = Array.from(document.getElementById('lamps').selectedOptions)
+                .map(option => option.value);
+            const lampControls = document.getElementById('lampControls');
+            lampControls.innerHTML = '';
+
+            selectedLamps.forEach(lamp => {
+                const lampName = document.querySelector(`#lamps option[value="${lamp}"]`).text;
+                lampControls.innerHTML += generateLampControlHTML(lamp, lampName);
+            });
+        }
+        function generateLampControlHTML(lamp, lampName) {
+            const { brightness, isOn } = lampState[lamp];
+            return `
+                <div id="lampControl${lamp}" class="my-3 row align-items-center">
+                    <div class="col-md-3">
+                        <span>Brightness Level: <span id="textSliderValue${lamp}">${brightness}</span>%</span>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center align-items-center">
+                        <button class="btn btn-outline-secondary" onclick="decreaseSliderValue(${lamp})">-</button>
+                        <input type="range" id="pwmSlider${lamp}" min="0" max="100" value="${brightness}" class="slider mx-2" aria-label="${lampName} Brightness" style="width: 450px;" oninput="updateSliderPWM(${lamp}, this)">
+                        <button class="btn btn-outline-secondary" onclick="increaseSliderValue(${lamp})">+</button>
+                        <label class="switch ml-2" style="width: 70px;">
+                            <input type="checkbox" id="lamp${lamp}Switch" class="toggle-switch" onclick="toggleLamp(${lamp})" ${isOn ? 'checked' : ''}>
+                            <span class="switch_slider"></span>
+                        </label>
+                    </div>
+                    <div class="col-md-3 text-right">
+                        <button class="btn btn-danger mx-2" onclick="removeLamp(${lamp})">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Slider control functions
+        function updateSliderPWM(lamp, element) {
+            const sliderValue = element.value;
+            document.getElementById(`textSliderValue${lamp}`).innerText = sliderValue;
+            lampState[lamp].brightness = sliderValue;
+            fetch(`/brightness?lamp=${lamp}&value=${sliderValue}`);
+            const checkbox = document.getElementById(`lamp${lamp}Switch`);
+            checkbox.checked = sliderValue > 0;
+            lampState[lamp].isOn = sliderValue > 0;
+        }
+        function increaseSliderValue(lamp) {
+            const slider = document.getElementById(`pwmSlider${lamp}`);
+            const newValue = Math.min(parseInt(slider.value) + 1, 100);
+            slider.value = newValue;
+            document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
+            lampState[lamp].brightness = newValue;
+            fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
+        }
+        function decreaseSliderValue(lamp) {
+            const slider = document.getElementById(`pwmSlider${lamp}`);
+            const newValue = Math.max(parseInt(slider.value) - 1, 0);
+            slider.value = newValue;
+            document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
+            lampState[lamp].brightness = newValue;
+            fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
+        }
+
+        // Toggle control functions
+        function toggleLamp(lamp) {
+            const checkbox = document.getElementById(`lamp${lamp}Switch`);
+            const slider = document.getElementById(`pwmSlider${lamp}`);
+            const newValue = checkbox.checked ? 100 : 0;
+            slider.value = newValue;
+            lampState[lamp].brightness = newValue;
+            lampState[lamp].isOn = checkbox.checked;
+            fetch(`/toggle?lamp=${lamp}&value=${newValue}`);
+        }
+
+        // Save all the current lamps as a profile
+        function saveProfile() {
+            const profileName = prompt("Enter the name of the profile:");
+            if (profileName) {
+                if (profiles[profileName]) {
+                    alert("Profile name already exists. Please choose a different name.");
+                    return;
+                }
+                profiles[profileName] = JSON.parse(JSON.stringify(lampState));
+                const profilesDropdown = document.getElementById('profiles');
+                const option = document.createElement('option');
+                option.value = profileName;
+                option.text = profileName;
+                profilesDropdown.add(option);
+                profilesDropdown.value = profileName;
+                alert("Profile saved successfully!");
+            }
+        }
+
+        // Profiles control functions //
 
         // Load predefined profiles from a JSON file
         document.addEventListener('DOMContentLoaded', () => {
@@ -235,199 +409,18 @@
                     }
                 }
 
-                displayLamp();
-                alert("Profile and associated lamps removed successfully!");
+                displayLamp(); alert("Profile and associated lamps removed successfully!");
             }
         }
 
-        // Add a new lamp to the list
-        function addLamp() {
-            const lampName = prompt("Enter the name of the lamp:");
-            if (lampName) {
-                const lampsDropdown = document.getElementById('lamps');
-                const existingLamp = Array.from(lampsDropdown.options).find(option => option.text === lampName);
-                if (existingLamp) {
-                    alert("Lamp name already exists. Please choose a different name.");
-                    return;
-                }
-                lampCounter++;
-                const option = document.createElement('option');
-                option.value = lampCounter;
-                option.text = lampName;
-                lampsDropdown.add(option);
-                lampState[lampCounter] = { brightness: 100, isOn: true };
-                lampsDropdown.value = lampCounter;
-                displayLamp();
-            }
-        }
 
-        // Remove the selected lamp from the list
-        function removeLamp(lamp) {
-            const lampControl = document.getElementById(`lampControl${lamp}`);
-            if (lampControl) {
-                lampControl.remove();
-            }
-            const lampsDropdown = document.getElementById('lamps');
-            for (let i = 0; i < lampsDropdown.options.length; i++) {
-                const option = lampsDropdown.options[i];
-                if (option.value === lamp.toString()) {
-                    option.selected = false;
-                    lampsDropdown.remove(i);
-                    break;
-                }
-            }
-            delete lampState[lamp];
-            displayLamp();
-        }
-
-                // Reset all lamps to 100% brightness
-        function reset() {
-            Object.keys(lampState).forEach(lamp => {
-                lampState[lamp].brightness = 100;
-                const slider = document.getElementById(`pwmSlider${lamp}`);
-                if (slider) {
-                    slider.value = 100;
-                    document.getElementById(`textSliderValue${lamp}`).innerText = 100;
-                }
-                fetch(`/brightness?lamp=${lamp}&value=100`);
-                lampState[lamp].isOn = true;
-                const switchElement = document.getElementById(`lamp${lamp}Switch`);
-                if (switchElement) {
-                    switchElement.checked = true;
-                }
-                fetch(`/toggle?lamp=${lamp}&value=100`);
-            });
-        }
-        // Reset all lamps to 100% brightness
-        function reset() {
-            Object.keys(lampState).forEach(lamp => {
-                lampState[lamp].brightness = 100;
-                const slider = document.getElementById(`pwmSlider${lamp}`);
-                if (slider) {
-                    slider.value = 100;
-                    document.getElementById(`textSliderValue${lamp}`).innerText = 100;
-                }
-                fetch(`/brightness?lamp=${lamp}&value=100`);
-                lampState[lamp].isOn = true;
-                const switchElement = document.getElementById(`lamp${lamp}Switch`);
-                if (switchElement) {
-                    switchElement.checked = true;
-                }
-                fetch(`/toggle?lamp=${lamp}&value=100`);
-            });
-        }
-
-        // Display the selected lamps with brightness control
-        function displayLamp() {
-            const selectedLamps = Array.from(document.getElementById('lamps').selectedOptions)
-                                        .map(option => option.value);
-            const lampControls = document.getElementById('lampControls');
-            lampControls.innerHTML = '';
-
-            selectedLamps.forEach(lamp => {
-                const lampName = document.querySelector(`#lamps option[value="${lamp}"]`).text;
-                lampControls.innerHTML += generateLampControlHTML(lamp, lampName);
-            });
-        }
-        function generateLampControlHTML(lamp, lampName) {
-            const { brightness, isOn } = lampState[lamp];
-            return `
-                <div id="lampControl${lamp}" class="my-3 row align-items-center">
-                    <div class="col-md-3">
-                        <span>Brightness Level: <span id="textSliderValue${lamp}">${brightness}</span>%</span>
-                    </div>
-                    <div class="col-md-6 d-flex justify-content-center align-items-center">
-                        <button class="btn btn-outline-secondary" onclick="decreaseSliderValue(${lamp})">-</button>
-                        <input type="range" id="pwmSlider${lamp}" min="0" max="100" value="${brightness}" class="slider mx-2" aria-label="${lampName} Brightness" style="width: 450px;" oninput="updateSliderPWM(${lamp}, this)">
-                        <button class="btn btn-outline-secondary" onclick="increaseSliderValue(${lamp})">+</button>
-                        <label class="switch ml-2" style="width: 70px;">
-                            <input type="checkbox" id="lamp${lamp}Switch" class="toggle-switch" onclick="toggleLamp(${lamp})" ${isOn ? 'checked' : ''}>
-                            <span class="switch_slider"></span>
-                        </label>
-                    </div>
-                    <div class="col-md-3 text-right">
-                        <button class="btn btn-danger mx-2" onclick="removeLamp(${lamp})">Remove</button>
-                    </div>
-                </div>
-            `;
-        }
-        // Slider control functions
-        function updateSliderPWM(lamp, element) {
-            const sliderValue = element.value;
-            document.getElementById(`textSliderValue${lamp}`).innerText = sliderValue;
-            lampState[lamp].brightness = sliderValue;
-            fetch(`/brightness?lamp=${lamp}&value=${sliderValue}`);
-            const checkbox = document.getElementById(`lamp${lamp}Switch`);
-            checkbox.checked = sliderValue > 0;
-            lampState[lamp].isOn = sliderValue > 0;
-        }
-        function increaseSliderValue(lamp) {
-            const slider = document.getElementById(`pwmSlider${lamp}`);
-            const newValue = Math.min(parseInt(slider.value) + 1, 100);
-            slider.value = newValue;
-            document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
-            lampState[lamp].brightness = newValue;
-            fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
-        }
-        function decreaseSliderValue(lamp) {
-            const slider = document.getElementById(`pwmSlider${lamp}`);
-            const newValue = Math.max(parseInt(slider.value) - 1, 0);
-            slider.value = newValue;
-            document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
-            lampState[lamp].brightness = newValue;
-            fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
-        }
-
-        // Toggle control functions
-        function toggleLamp(lamp) {
-            const checkbox = document.getElementById(`lamp${lamp}Switch`);
-            const slider = document.getElementById(`pwmSlider${lamp}`);
-            const newValue = checkbox.checked ? 100 : 0;
-            slider.value = newValue;
-            lampState[lamp].brightness = newValue;
-            lampState[lamp].isOn = checkbox.checked;
-            fetch(`/toggle?lamp=${lamp}&value=${newValue}`);
-        }
-        // Save all the current lamps as a profile
-        function saveProfile() {
-            const profileName = prompt("Enter the name of the profile:");
-            if (profileName) {
-                if (profiles[profileName]) {
-                    alert("Profile name already exists. Please choose a different name.");
-                    return;
-                }
-                profiles[profileName] = JSON.parse(JSON.stringify(lampState));
-                const profilesDropdown = document.getElementById('profiles');
-                const option = document.createElement('option');
-                option.value = profileName;
-                option.text = profileName;
-                profilesDropdown.add(option);
-                profilesDropdown.value = profileName;
-                alert("Profile saved successfully!");
-            }
-        }
-
-        // Remove all lamps 
-        // TODO: Function to remove all lamps not working
-        function removeAllLamps() {
-            const lampsDropdown = document.getElementById('lamps');
-            lampsDropdown.innerHTML = ''; 
-            for (const lamp in lampState) {
-                const lampControl = document.getElementById(`lampControl${lamp}`);
-                if (lampControl) {
-                    lampControl.remove();
-                }
-            }
-            lampState = {};
-            
-        }
-
-        // TODO: Function to remove all lamps not working
+        // Reload the predefined profiles and display the lamps
         function reloadProfiles() {
             removeAllLamps();
             selectProfilesFromFile();
             populateProfilesDropdown();
         }
+
         // Select a saved profile and display the lamps
         function selectProfile() {
             const selectedProfile = document.getElementById('profiles').value;
@@ -466,4 +459,5 @@
         }
     </script>
 </body>
+
 </html>
