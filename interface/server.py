@@ -14,16 +14,17 @@ def index():
 @app.route('/brightness')
 def get_brightness():
     try:
+        lamp_id = request.args.get('lamp')
         percent = int(request.args.get('value', 0))
         if 1 <= percent <= 100:
             brightness = int(percent * 2.54) 
-            ser.write(f'{brightness}\n'.encode())
-            print(f"Sent brightness value: {brightness}")  
-            return jsonify(message=f"Brightness set to {percent}%")
+            ser.write(f'{lamp_id}:{brightness}\n'.encode())
+            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
+            return jsonify(message=f"Brightness set to {percent}% for lamp {lamp_id}")
         elif percent == 0:
-            ser.write(f'{-1}\n'.encode())
-            print(f"Sent brightness value: 0")  
-            return jsonify(message="Lamp Off")
+            ser.write(f'{lamp_id}:-1\n'.encode())
+            print(f"Sent brightness value: 0 for lamp {lamp_id}")  
+            return jsonify(message=f"Lamp {lamp_id} Off")
         else:
             return jsonify(error="Invalid percent value. Must be between 0 and 100."), 400
     except Exception as e:
@@ -32,16 +33,17 @@ def get_brightness():
 @app.route('/toggle')
 def toggle_lamp():
     try:
+        lamp_id = request.args.get('lamp')
         percent = int(request.args.get('value', 0))
         brightness = int(percent * 2.54) 
-        if (brightness == 254):
-            ser.write(f'{255}\n'.encode()) 
-            print(f"Sent brightness value: {brightness}")  
-            return jsonify(message="Lamp On")
-        elif (brightness == 0):
-            ser.write(f'{-1}\n'.encode()) 
-            print(f"Sent brightness value: {brightness}")  
-            return jsonify(message="Lamp Off")
+        if brightness == 254:
+            ser.write(f'{lamp_id}:255\n'.encode()) 
+            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
+            return jsonify(message=f"Lamp {lamp_id} On")
+        elif brightness == 0:
+            ser.write(f'{lamp_id}:-1\n'.encode()) 
+            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
+            return jsonify(message=f"Lamp {lamp_id} Off")
     except Exception as e:
         return jsonify(error=str(e)), 500
 

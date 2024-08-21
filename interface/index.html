@@ -137,13 +137,13 @@
             <div class="card-body">
                 <p class="card-text">Select a saved Profile:</p>
                 <div class="d-flex mb-3">
-                    <select name="profiles" id="profiles" class="form-control mr-2" onchange="selectProfile()">
+                    <select name="profiles" id="profiles" class="form-control mr-2" onclick="selectProfile()">
                         <option value="" selected>Choose your profile</option>
                     </select>
                 </div>
                 <div class="d-flex justify-content-between">
                     <div class="mx-auto">
-                        <button class="btn btn-primary text-center" onclick="exportProfiles()">Export Profile</button>
+                        <button class="btn btn-success text-" onclick="exportProfiles()">Export Profile</button>
                     </div>
                     <div>
                         <button class="btn btn-danger text-right" onclick="removeProfile()">Remove</button>
@@ -169,15 +169,25 @@
     </div>
 
     <script>
+        let lampMax = 9;
+        let lampConnected = prompt("Enter the number Lamps to control:"); 
+        if (lampConnected > lampMax) {
+            alert("The maximum number of lamps is " + lampMax + ". Please enter a number less than or equal to " + lampMax + ".");
+            lampConnected = lampMax;
+        }
         let lampCounter = 0;
         let lampState = {};
         let profiles = {};
         let predefined_profiles = {};
-
+        let deletedLampIds = []; 
         // Lamps control functions //
 
         // Add a new lamp to the list
         function addLamp() {
+            if (lampCounter >= lampConnected && deletedLampIds.length === 0) {
+                alert("The maximum number of lamps is " + lampConnected + ". Please remove a lamp before adding a new one.");
+                return;
+            }
             const lampName = prompt("Enter the name of the lamp:");
             if (lampName) {
                 const lampsDropdown = document.getElementById('lamps');
@@ -186,16 +196,24 @@
                     alert("Lamp name already exists. Please choose a different name.");
                     return;
                 }
-                lampCounter++;
+                
+                let lampId;
+                if (deletedLampIds.length > 0) {
+                    lampId = deletedLampIds.pop(); // Reuse the last deleted lamp ID
+                    lampCounter++;
+                } else {
+                    lampId = ++lampCounter; // Use a new lamp ID
+                }
                 const option = document.createElement('option');
-                option.value = lampCounter;
+                option.value = lampId;
                 option.text = lampName;
                 lampsDropdown.add(option);
-                lampState[lampCounter] = { brightness: 100, isOn: true };
-                lampsDropdown.value = lampCounter;
+                lampState[lampId] = { brightness: 100, isOn: true };
+                // Set the new lamp as selected
+                lampsDropdown.value = lampId;
                 // Save custom name to localStorage
                 const customNames = JSON.parse(localStorage.getItem('customLampNames')) || {};
-                customNames[lampCounter] = lampName;
+                customNames[lampId] = lampName;
                 localStorage.setItem('customLampNames', JSON.stringify(customNames));
                 displayLamp();
             }
@@ -216,8 +234,16 @@
                     break;
                 }
             }
+            lampCounter--;
+            deletedLampIds.push(lamp); 
             delete lampState[lamp];
-            displayLamp();
+            // Select the last remaining lamp option if any
+            if (lampsDropdown.options.length > 0) {
+                lampsDropdown.selectedIndex = lampsDropdown.options.length - 1;
+                displayLamp();
+            } else {
+                document.getElementById('lampControls').innerHTML = '';
+            }
         }
 
         // Remove all lamps 
@@ -231,7 +257,7 @@
                 }
             }
             lampState = {};
-
+            lampCounter = 0;
         }
 
         // Reset all lamps to 100% brightness
@@ -303,6 +329,8 @@
             const newValue = Math.min(parseInt(slider.value) + 1, 100);
             slider.value = newValue;
             document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
+            const checkbox = document.getElementById(`lamp${lamp}Switch`);
+            checkbox.checked = newValue > 0;
             lampState[lamp].brightness = newValue;
             fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
         }
@@ -311,6 +339,8 @@
             const newValue = Math.max(parseInt(slider.value) - 1, 0);
             slider.value = newValue;
             document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
+            const checkbox = document.getElementById(`lamp${lamp}Switch`);
+            checkbox.checked = newValue > 0;
             lampState[lamp].brightness = newValue;
             fetch(`/brightness?lamp=${lamp}&value=${newValue}`);
         }
@@ -323,10 +353,11 @@
             slider.value = newValue;
             lampState[lamp].brightness = newValue;
             lampState[lamp].isOn = checkbox.checked;
+            document.getElementById(`textSliderValue${lamp}`).innerText = newValue;
             fetch(`/toggle?lamp=${lamp}&value=${newValue}`);
         }
 
-        // Save all the current lamps as a profile
+        // Add/ Save all the current lamps as a profile
         function saveProfile() {
             const profileName = prompt("Enter the name of the profile:");
             if (profileName) {
@@ -379,6 +410,7 @@
                     const option = document.createElement('option');
                     option.value = lamp;
                     option.text = lamp;
+                    option.disabled = true;
                     lampsDropdown.add(option);
                 });
                 displayLamp();
@@ -439,7 +471,11 @@
                     option.value = lamp;
                     option.text = customNames[lamp] || lamp; // Use custom name if available
                     lampsDropdown.add(option);
-                });
+                    // Update the slider value and call updateSliderPWM for each lamp
+                    const slider = document.getElementById(`pwmSlider${lamp}`);
+                    const sliderValue = slider.value;
+                    fetch(`/brightness?lamp=${lamp}&value=${sliderValue}`);
+                    });
                 displayLamp();
             }
         }
@@ -463,7 +499,7 @@
             };
             exportProfiles();
         }
-    </script>
+    </script> 
 </body>
 
 </html>
