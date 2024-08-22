@@ -1,0 +1,14 @@
+{
+    "Left Panel": {
+        "id": 1,
+        "name": "Left Panel",
+        "pin": 2,
+        "brightness": 0
+    },
+    "New Panel": {
+        "id": 0,
+        "name": "New Panel",
+        "pin": 2,
+        "brightness": 50
+    }
+}

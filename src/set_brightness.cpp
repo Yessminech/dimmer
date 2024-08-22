@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-const int pwmPin6 = 6;
-const int pwmPin5 = 5;
+const int DEFAULT_PINS[] = {2, 3, 4, 5, 6, 7, 8, 9, 10}; // Add more DEFAULT_PINS as needed
+const int numPins = sizeof(DEFAULT_PINS) / sizeof(DEFAULT_PINS[0]);
 const int ON_THRESHOLD = 255;
 const int OFF_THRESHOLD = -1;
 const int MIN_BRIGHTNESS = 0;
@@ -11,8 +11,10 @@ const int MAX_PWM_VALUE = 90;
 
 void setup()
 {
-    pinMode(pwmPin6, OUTPUT);
-    pinMode(pwmPin5, OUTPUT);
+    for (int i = 0; i < numPins; i++)
+    {
+        pinMode(DEFAULT_PINS[i], OUTPUT);
+    }
     Serial.begin(9600);
 }
 
@@ -20,36 +22,41 @@ void loop()
 {
     if (Serial.available())
     {
-        int lampId = Serial.parseInt(); 
-        int brightness = Serial.parseInt();
-        while (Serial.read() != '\n')
+        String command = Serial.readStringUntil('\n');
+        int separatorIndex = command.indexOf(':');
+        if (separatorIndex == -1)
         {
-            // Clear the serial buffer
+            Serial.println("Invalid command format");
+            return;
         }
 
-        int pwmPin;
-        if (lampId == 1)
+        int lampPin = command.substring(0, separatorIndex).toInt();
+        int brightness = command.substring(separatorIndex + 1).toInt();
+
+        bool validPin = false;
+        for (int i = 0; i < numPins; i++)
         {
-            pwmPin = pwmPin6;
+            if (DEFAULT_PINS[i] == lampPin)
+            {
+                validPin = true;
+                break;
+            }
         }
-        else if (lampId == 2)
+
+        if (!validPin)
         {
-            pwmPin = pwmPin5;
-        }
-        else
-        {
-            Serial.println("Invalid lamp ID");
+            Serial.println("Invalid pin");
             return;
         }
 
         if (brightness == ON_THRESHOLD)
         {
-            analogWrite(pwmPin, -90);
+            analogWrite(lampPin, -90);
             Serial.println("Lamp set to: ON");
         }
         else if (brightness == OFF_THRESHOLD)
         {
-            analogWrite(pwmPin, -10);
+            analogWrite(lampPin, -10);
             Serial.println("Lamp set to: OFF");
         }
         else if (brightness >= MIN_BRIGHTNESS && brightness <= MAX_BRIGHTNESS)
@@ -57,13 +64,13 @@ void loop()
             int pwmValue = map(brightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS, MIN_PWM_VALUE, MAX_PWM_VALUE);
             if (pwmValue < 71 && pwmValue > 49)
             {
-            analogWrite(pwmPin, 0);
+                analogWrite(lampPin, 0);
             }
             else if (pwmValue < 0)
             {
                 pwmValue = 0;
             }
-            analogWrite(pwmPin, -pwmValue);
+            analogWrite(lampPin, -pwmValue);
             Serial.print("Brightness set to: ");
             Serial.println(pwmValue);
         }

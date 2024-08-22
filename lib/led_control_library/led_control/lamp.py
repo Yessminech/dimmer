@@ -35,8 +35,9 @@ class Lamp:
         Converts the Lamp object to a dictionary for easy JSON serialization.
         """
         return {
+            "id": self.id,
             "name": self.name,
-            "pin": self.pin, #TODO
+            "pin": self.pin,
             "brightness": self.brightness
         }
     
@@ -48,4 +49,4 @@ class Lamp:
         :param data: Dictionary with lamp data.
         :return: A Lamp object.
         """
-        return Lamp(name=data['name'], pin=data['pin'], brightness=data['brightness']) #TODO
+        return Lamp(id=data['id'], name=data['name'], pin=data['pin'], brightness=data['brightness'])

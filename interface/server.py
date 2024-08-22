@@ -7,6 +7,13 @@ port = '/dev/ttyACM0'
 ser = serial.Serial(port, 9600, timeout=1)
 time.sleep(2) 
 
+DEFAULT_PINS = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+lamp_pin_mapping = {
+    1: DEFAULT_PINS[0],
+    2: DEFAULT_PINS[1],
+}
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
@@ -14,17 +21,25 @@ def index():
 @app.route('/brightness')
 def get_brightness():
     try:
-        lamp_id = request.args.get('lamp')
+        lamp_index = int(request.args.get('lamp'))
         percent = int(request.args.get('value', 0))
         if 1 <= percent <= 100:
             brightness = int(percent * 2.54) 
-            ser.write(f'{lamp_id}:{brightness}\n'.encode())
-            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
-            return jsonify(message=f"Brightness set to {percent}% for lamp {lamp_id}")
+            pin = lamp_pin_mapping.get(lamp_index)
+            if pin is not None:
+                ser.write(f'{pin}:{brightness}\n'.encode())
+                print(f"Sent brightness value: {brightness} for lamp {lamp_index}")  
+                return jsonify(message=f"Brightness set to {percent}% for lamp {lamp_index}")
+            else:
+                return jsonify(error="Invalid lamp index."), 400
         elif percent == 0:
-            ser.write(f'{lamp_id}:-1\n'.encode())
-            print(f"Sent brightness value: 0 for lamp {lamp_id}")  
-            return jsonify(message=f"Lamp {lamp_id} Off")
+            pin = lamp_pin_mapping.get(lamp_index)
+            if pin is not None:
+                ser.write(f'{pin}:-1\n'.encode())
+                print(f"Sent brightness value: 0 for lamp {lamp_index}")  
+                return jsonify(message=f"Lamp {lamp_index} Off")
+            else:
+                return jsonify(error="Invalid lamp index."), 400
         else:
             return jsonify(error="Invalid percent value. Must be between 0 and 100."), 400
     except Exception as e:
@@ -33,17 +48,23 @@ def get_brightness():
 @app.route('/toggle')
 def toggle_lamp():
     try:
-        lamp_id = request.args.get('lamp')
+        lamp_index = int(request.args.get('lamp'))
         percent = int(request.args.get('value', 0))
         brightness = int(percent * 2.54) 
-        if brightness == 254:
-            ser.write(f'{lamp_id}:255\n'.encode()) 
-            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
-            return jsonify(message=f"Lamp {lamp_id} On")
-        elif brightness == 0:
-            ser.write(f'{lamp_id}:-1\n'.encode()) 
-            print(f"Sent brightness value: {brightness} for lamp {lamp_id}")  
-            return jsonify(message=f"Lamp {lamp_id} Off")
+        pin = lamp_pin_mapping.get(lamp_index)
+        if pin is not None:
+            if brightness == 254:
+                ser.write(f'{pin}:255\n'.encode()) 
+                print(f"Sent brightness value: {brightness} for lamp {lamp_index}")  
+                return jsonify(message=f"Lamp {lamp_index} On")
+            elif brightness == 0:
+                ser.write(f'{pin}:-1\n'.encode()) 
+                print(f"Sent brightness value: {brightness} for lamp {lamp_index}")  
+                return jsonify(message=f"Lamp {lamp_index} Off")
+            else:
+                return jsonify(error="Invalid percent value. Must be either 0 or 100."), 400
+        else:
+            return jsonify(error="Invalid lamp index."), 400
     except Exception as e:
         return jsonify(error=str(e)), 500
 

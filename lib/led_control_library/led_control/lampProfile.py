@@ -1,5 +1,6 @@
 import json
-from .config import MAX_LAMPS
+from .config import MAX_LAMPS, CONNECTED_LAMPS
+from .lamp import Lamp
 
 class Profile:
     def __init__(self, id: int, name: str):
@@ -19,27 +20,32 @@ class Profile:
         
         :param lamp: Lamp object to be added.
         """
-        if len(self.lamps) >= MAX_LAMPS:
-            raise ValueError(f"Cannot add more than {MAX_LAMPS} lamps.")
+        if len(self.lamps) >= CONNECTED_LAMPS:
+            raise ValueError(f"Cannot add more than {CONNECTED_LAMPS} lamps.")
         self.lamps[lamp.name] = lamp #TODO check the indices of the lamps
 
-    def remove_lamp(self, lamp_name: str):
+    def remove_lamp(self, lamp_identifier: str): #TODO turn it off
         """
-        Removes a lamp from the profile by its name.
+        Removes a lamp from the profile by its name or ID.
         
-        :param lamp_name: The name of the lamp to remove.
+        :param lamp_identifier: The name or ID of the lamp to remove.
         """
-        if lamp_name in self.lamps:
-            del self.lamps[lamp_name] #TODO check the indices of the lamps
-    
-    def get_lamp(self, lamp_name: str) -> Lamp:
+        for lamp_name, lamp in self.lamps.items():
+            if lamp.name == lamp_identifier or lamp.id == lamp_identifier:
+                del self.lamps[lamp_name]
+                break
+
+    def get_lamp(self, lamp_identifier: str) -> Lamp:
         """
-        Retrieves a lamp from the profile by its name.
+        Retrieves a lamp from the profile by its name or ID.
         
-        :param lamp_name: The name of the lamp to retrieve.
+        :param lamp_identifier: The name or ID of the lamp to retrieve.
         :return: Lamp object.
         """
-        return self.lamps.get(lamp_name)
+        for lamp in self.lamps.values():
+            if lamp.name == lamp_identifier or lamp.id == lamp_identifier:
+                return lamp
+        return None
     
     def export_to_json(self, filepath: str):
         """

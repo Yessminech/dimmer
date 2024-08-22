@@ -1,7 +1,10 @@
 import serial
+from .lamp import Lamp
+from .lampProfile import Profile
+from .config import USB_PORT, DEFAULT_PINS
 
 class Controller:
-    def __init__(self, port: str, baudrate: int = 9600): #TODO import port ftom config 
+    def __init__(self, port = USB_PORT, baudrate: int = 9600):
         """
         Initializes the Controller object to communicate with Arduino.
         
@@ -9,9 +12,17 @@ class Controller:
         :param baudrate: The baud rate for the serial communication.
         """
         self.serial_conn = serial.Serial(port, baudrate)
-    
-    def set_pwm(self, lamp: Lamp):
+
+    def set_pins(self):
         """
+        Sends commands to the Arduino to set the default pins for subsequent operations.
+        """
+        for pin in DEFAULT_PINS:
+            command = f"PIN:{pin}\n"
+            self.serial_conn.write(command.encode())
+
+    def set_pwm(self, lamp: Lamp):
+        """y
         Sends a command to the Arduino to set the PWM value of a specific pin.
         
         :param lamp: Lamp object containing pin and brightness information.
@@ -27,37 +38,3 @@ class Controller:
         """
         for lamp in profile.lamps.values():
             self.set_pwm(lamp)
-
-
-# import serial
-
-# class LampController:
-#     def __init__(self, port):
-#         self.lamps = {}
-#         self.profiles = {}
-#         self.serial = serial.Serial(port, 9600)
-
-#     def add_lamp(self, name, pin):
-#         lamp = Lamp(name, pin)
-#         self.lamps[name] = lamp
-
-#     def remove_lamp(self, name):
-#         if name in self.lamps:
-#             del self.lamps[name]
-
-#     def set_lamp_brightness(self, name, brightness):
-#         if name in self.lamps:
-#             self.lamps[name].set_brightness(brightness)
-#             self.serial.write(f"{self.lamps[name].pin}:{brightness}\n".encode())
-
-#     def save_profile(self, profile_name, filename):
-#         profile = Profile(profile_name)
-#         for lamp in self.lamps.values():
-#             profile.add_lamp(lamp)
-#         profile.save_to_file(filename)
-#         self.profiles[profile_name] = profile
-
-#     def load_profile(self, filename):
-#         profile = Profile.load_from_file(filename)
-#         self.profiles[profile.name] = profile
-#         self.lamps = {lamp.name: lamp for lamp in profile.lamps}

@@ -10,7 +10,7 @@ setup(
     author='Yessmine Chabchoub',
     author_email='chabchoub.yessmine@gmail.com',
     description='A Python library to control LED brightness using Arduino',
-    long_description=open('README.md').read(),
+    long_description=open('Readme.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/yessminech/led_control_library',
     classifiers=[
