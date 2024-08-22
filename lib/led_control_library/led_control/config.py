@@ -1,0 +1,5 @@
+# config.py
+DEFAULT_PINS = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+MAX_LAMPS = 9
+MIN_BRIGHTNESS = 0
+MAX_BRIGHTNESS = 100
