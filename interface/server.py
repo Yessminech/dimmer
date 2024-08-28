@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify, send_from_directory
 import serial
 import time
 
+# Set to True to run in debug mode
+DEGUB = False
+
 app = Flask(__name__)
 import serial.tools.list_ports
 
@@ -90,4 +93,8 @@ def set_profile():
         return jsonify(error=str(e)), 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    if (DEGUB):
+        app.run(port=5000, debug=True)
+    else:
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=8080)
