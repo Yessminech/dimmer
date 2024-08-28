@@ -359,6 +359,7 @@
 
                     // Select the imported profile
                     profilesDropdown.value = profileName;
+                    selectProfile();
                     displayLamp();
 
                     alert(`Profile "${profileName}" imported successfully!`);
@@ -367,6 +368,7 @@
                 }
             };
             reader.readAsText(file);
+
         }
     }
 

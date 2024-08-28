@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify, send_from_directory
 import serial
 import time
+from waitress import serve
 
 # Set to True to run in debug mode
-DEGUB = False
+DEBUG = False
 
 app = Flask(__name__)
 import serial.tools.list_ports
@@ -26,14 +27,28 @@ time.sleep(2)
 
 DEFAULT_PINS = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
+# Map lamp index to pin number
 lamp_pin_mapping = {i: DEFAULT_PINS[i-1] for i in range(1, 10)}
 
 @app.route('/')
 def index():
+    """
+    Serve the index.html file.
+    """
     return send_from_directory('.', 'index.html')
 
 @app.route('/brightness')
 def get_brightness():
+    """
+    Set the brightness of a lamp.
+
+    Query Parameters:
+    - lamp: The index of the lamp (1-9).
+    - value: The brightness percentage (0-100).
+
+    Returns:
+    - JSON response with a success message or an error message.
+    """
     try:
         lamp_index = int(request.args.get('lamp'))
         percent = int(request.args.get('value', 0))
@@ -61,6 +76,16 @@ def get_brightness():
 
 @app.route('/toggle')
 def toggle_lamp():
+    """
+    Toggle the state of a lamp (on/off).
+
+    Query Parameters:
+    - lamp: The index of the lamp (1-9).
+    - value: The brightness percentage (0-100).
+
+    Returns:
+    - JSON response with a success message or an error message.
+    """
     try:
         lamp_index = int(request.args.get('lamp'))
         percent = int(request.args.get('value', 0))
@@ -82,9 +107,17 @@ def toggle_lamp():
     except Exception as e:
         return jsonify(error=str(e)), 500
 
-#TODO: Add profile specific settings 
 @app.route('/profile')
 def set_profile():
+    """
+    Set the profile of the lamp controller.
+
+    Query Parameters:
+    - name: The name of the profile.
+
+    Returns:
+    - JSON response with a success message or an error message.
+    """
     profile_name = request.args.get('name')
     try:
         ser.write(f'profile:{profile_name}\n'.encode())
@@ -93,8 +126,7 @@ def set_profile():
         return jsonify(error=str(e)), 500
 
 if __name__ == '__main__':
-    if (DEGUB):
+    if DEBUG:
         app.run(port=5000, debug=True)
     else:
-        from waitress import serve
         serve(app, host="0.0.0.0", port=8080)
