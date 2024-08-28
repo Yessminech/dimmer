@@ -1,0 +1,14 @@
+{
+  "1": {
+    "id": 1,
+    "name": "Left Panel",
+    "brightness": "54",
+    "isOn": true
+  },
+  "2": {
+    "id": 2,
+    "name": "Right Panel",
+    "brightness": "27",
+    "isOn": true
+  }
+}

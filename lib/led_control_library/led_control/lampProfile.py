@@ -10,6 +10,8 @@ class Profile:
         :param id: ID of the profile.
         :param name: Name of the profile.
         """
+        if id < 1:
+            raise ValueError("ID must be greater than or equal to 1")
         self.id = id
         self.name = name
         self.lamps = {}

@@ -6,4 +6,12 @@ ON_THRESHOLD = 255
 OFF_THRESHOLD = -1
 MIN_BRIGHTNESS = 0
 MAX_BRIGHTNESS = 254
-USB_PORT = '/dev/ttyACM0'
+# Find available serial ports
+
+import serial.tools.list_ports
+ports = serial.tools.list_ports.comports()
+port = None
+for p in ports:
+    if 'ACM' in p.device:
+        USB_PORT = p.device
+        break

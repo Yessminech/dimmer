@@ -27,7 +27,10 @@ class Controller:
         
         :param lamp: Lamp object containing pin and brightness information.
         """
-        command = f"{lamp.pin}:{lamp.brightness}\n"
+        if lamp.brightness == 0:
+            command = f"{lamp.pin}:-1\n"
+        else:
+            command = f"{lamp.pin}:{lamp.brightness}\n"
         self.serial_conn.write(command.encode())
     
     def apply_profile(self, profile: Profile):
