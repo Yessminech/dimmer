@@ -6,7 +6,7 @@ from waitress import serve
 # Set to True to run in debug mode
 DEBUG = False
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 import serial.tools.list_ports
 
 # Find available serial ports
@@ -129,4 +129,4 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(port=5000, debug=True)
     else:
-        serve(app, host="0.0.0.0", port=8080)
+        serve(app, host="0.0.0.0", port=8088)
