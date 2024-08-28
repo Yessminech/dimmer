@@ -21,12 +21,14 @@ class Controller:
             command = f"PIN:{pin}\n"
             self.serial_conn.write(command.encode())
 
-    def set_pwm(self, lamp: Lamp):
+    def set_pwm(self, lamp: Lamp, brightness: int = None):
         """y
         Sends a command to the Arduino to set the PWM value of a specific pin.
         
         :param lamp: Lamp object containing pin and brightness information.
         """
+        if brightness is not None:
+            lamp.brightness = brightness
         if lamp.brightness == 0:
             command = f"{lamp.pin}:-1\n"
         else:

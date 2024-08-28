@@ -2,7 +2,7 @@ from .config import DEFAULT_PINS, MIN_BRIGHTNESS, MAX_BRIGHTNESS
 
 class Lamp:
 
-    def __init__(self, id: int, name: str, brightness: int, pin: int = None): #TODO check if brightness is on or off 
+    def __init__(self, id: int, name: str = None, brightness: int = MAX_BRIGHTNESS, pin: int = None): #TODO check if brightness is on or off 
         """
         Initializes a Lamp object.
         
@@ -16,12 +16,13 @@ class Lamp:
         if pin not in DEFAULT_PINS:
             raise ValueError(f"Pin {pin} is not in the allowed pin list: {DEFAULT_PINS}")
         self.pin = pin
-        # if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
-        #     raise ValueError(f"Brightness value {brightness} is not in the allowed range: {MIN_BRIGHTNESS}-{MAX_BRIGHTNESS}")
+        if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
+            raise ValueError(f"Brightness value {brightness} is not in the allowed range: {MIN_BRIGHTNESS}-{MAX_BRIGHTNESS}")
         if id < 1:
             raise ValueError("ID must be greater than or equal to 1")
         self.id = id
-        self.name = name
+        if not name:
+            self.name = f"Lamp_{id}"
         self.brightness = brightness
 
     def set_brightness(self, brightness: int):
