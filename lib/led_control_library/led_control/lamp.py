@@ -2,7 +2,7 @@ from .config import DEFAULT_PINS, MIN_BRIGHTNESS, MAX_BRIGHTNESS
 
 class Lamp:
 
-    def __init__(self, id: int, name: str, pin: int, brightness: int = 0): #TODO check if brightness is on or off 
+    def __init__(self, id: int, name: str, brightness: int, pin: int): #TODO check if brightness is on or off 
         """
         Initializes a Lamp object.
         
@@ -13,12 +13,12 @@ class Lamp:
         """
         if pin not in DEFAULT_PINS:
             raise ValueError(f"Pin {pin} is not in the allowed pin list: {DEFAULT_PINS}")
-        if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
-            raise ValueError(f"Brightness value {brightness} is not in the allowed range: {MIN_BRIGHTNESS}-{MAX_BRIGHTNESS}")
+        # if brightness < MIN_BRIGHTNESS or brightness > MAX_BRIGHTNESS:
+        #     raise ValueError(f"Brightness value {brightness} is not in the allowed range: {MIN_BRIGHTNESS}-{MAX_BRIGHTNESS}")
         self.id = id
         self.name = name
-        self.pin = pin
         self.brightness = brightness
+        self.pin = pin
     
     def set_brightness(self, brightness: int):
         """
@@ -34,13 +34,15 @@ class Lamp:
         """
         Converts the Lamp object to a dictionary for easy JSON serialization.
         """
+        isOn = False if self.brightness == 0 else True
+        brightness_percentage = (self.brightness / 254) * 100
         return {
             "id": self.id,
             "name": self.name,
-            "pin": self.pin,
-            "brightness": self.brightness
+            "brightness": brightness_percentage,
+            "isOn": isOn,
+            "pin": self.pin
         }
-    
     @staticmethod
     def from_dict(data: dict):
         """
@@ -49,4 +51,6 @@ class Lamp:
         :param data: Dictionary with lamp data.
         :return: A Lamp object.
         """
-        return Lamp(id=data['id'], name=data['name'], pin=data['pin'], brightness=data['brightness'])
+        isOn = True if data['isOn'] else False
+        brightness = -1 if not isOn else int((data['brightness'] / 100) * 254)
+        return Lamp(id=data['id'], name=data['name'], brightness=brightness, pin=data['pin'])

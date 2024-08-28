@@ -153,12 +153,13 @@
 
     <script>
         let lampMax = 9;
-        let lampConnected = prompt("Enter the number Lamps to control:"); 
-        if (lampConnected > lampMax) {
-            alert("The maximum number of lamps is " + lampMax + ". Please enter a number less than or equal to " + lampMax + ".");
-            lampConnected = lampMax;
-        }
-        let lampCounter = 0;
+        // let lampConnected = prompt("Enter the number Lamps to control:"); 
+        // if (lampConnected > lampMax) {
+        //     alert("The maximum number of lamps is " + lampMax + ". Please enter a number less than or equal to " + lampMax + ".");
+        //     lampConnected = lampMax;
+        // }
+        let lampConnected = 9 //TODO
+        let lampCounter = -1;
         let lampState = {};
         let profiles = {};
         let deletedLampIds = []; 
@@ -167,19 +168,14 @@
 
         // Add a new lamp to the list
         function addLamp() {
+            if (document.getElementById('profiles').value === "") {
+                alert("Please select a profile before adding a lamp.");
+                return;
+            }
             
             if (lampCounter >= lampConnected && deletedLampIds.length === 0) {
                 alert("The maximum number of lamps is " + lampConnected + ". Please remove a lamp before adding a new one.");
                 return;
-            }
-            let lampId;
-            if (deletedLampIds.length > 0) {
-                lampId = deletedLampIds.pop(); // Reuse the last deleted lamp ID
-                alert("This value will be assigned to lamp:" + lampId);
-                lampCounter++;
-            } else {
-                lampId = ++lampCounter; // Use a new lamp ID
-                alert("This value will be assigned to lamp:" + lampId);
             }
             const lampName = prompt("Enter the name of the lamp:");
             if (lampName) {
@@ -188,6 +184,14 @@
                 if (existingLamp) {
                     alert("Lamp name already exists. Please choose a different name.");
                     return;
+                }
+                
+                let lampId;
+                if (deletedLampIds.length > 0) {
+                    lampId = deletedLampIds.pop(); // Reuse the last deleted lamp ID
+                    lampCounter++;
+                } else {
+                    lampId = ++lampCounter; // Use a new lamp ID
                 }
                 const option = document.createElement('option');
                 option.value = lampId;

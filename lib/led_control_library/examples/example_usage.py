@@ -3,8 +3,8 @@ from led_control_library.led_control.lampProfile import Profile
 from led_control_library.led_control.controller import Controller
 
 # Create lamps with specific names, pins, and brightness levels
-rightLamp = Lamp(id=0, name="Right Panel", pin=3, brightness=-1)
-leftLamp = Lamp(id=1, name="Left Panel", pin=2, brightness=255)
+rightLamp = Lamp(id=0, name="Left Panel", brightness=0, pin=2)
+leftLamp = Lamp(id=1, name="Right Panel", brightness=254,  pin=3)
 
 # Create a profile and add lamps to it
 morningProfile = Profile(id= 0, name="Morning")
@@ -18,13 +18,13 @@ controller = Controller(port='/dev/ttyACM0')
 controller.apply_profile(morningProfile)
 
 
-# # Save the current profile to a JSON file
-# morningProfile.export_to_json("morning_profile.json")
+# Save the current profile to a JSON file
+morningProfile.export_to_json("morning_profile.json")
 
-# # Load the profile from a JSON file and apply it 
-# importedProfile = Profile(id=1, name="Imported Profile")
-# importedProfile.import_from_json("/home/test/Documents/dimmer/code/main/lib/morning_profile.json") #TODO
-# controller.apply_profile(importedProfile)
+# Load the profile from a JSON file and apply it 
+importedProfile = Profile(id=0, name="Imported Profile")
+importedProfile.import_from_json("/home/test/Documents/dimmer/code/main/lib/led_control_library/morning_profile.json") #TODO
+controller.apply_profile(importedProfile)
 
 # # Additional operations
 

@@ -46,7 +46,6 @@ class Profile:
             if lamp.name == lamp_identifier or lamp.id == lamp_identifier:
                 return lamp
         return None
-    
     def export_to_json(self, filepath: str):
         """
         Exports the profile to a JSON file.
@@ -54,7 +53,7 @@ class Profile:
         :param filepath: Path to the JSON file.
         """
         with open(filepath, 'w') as file:
-            json.dump({lamp_name: lamp.to_dict() for lamp_name, lamp in self.lamps.items()}, file, indent=4)
+            json.dump({lamp.id: lamp.to_dict() for lamp in self.lamps.values()}, file, indent=4)
     
     def import_from_json(self, filepath: str):
         """
@@ -64,5 +63,5 @@ class Profile:
         """
         with open(filepath, 'r') as file:
             data = json.load(file)
-            for lamp_name, lamp_data in data.items():
-                self.lamps[lamp_name] = Lamp.from_dict(lamp_data)
+            for lamp_id, lamp_data in data.items():
+                self.lamps[lamp_id] = Lamp.from_dict(lamp_data)

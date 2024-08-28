@@ -3,16 +3,27 @@ import serial
 import time
 
 app = Flask(__name__)
-port = '/dev/ttyACM0' 
+import serial.tools.list_ports
+
+# Find available serial ports
+ports = serial.tools.list_ports.comports()
+port = None
+
+for p in ports:
+    if 'ACM' in p.device:
+        port = p.device
+        break
+
+if port is None:
+    print("No Arduino device found.")
+    exit()
+
 ser = serial.Serial(port, 9600, timeout=1)
 time.sleep(2) 
 
 DEFAULT_PINS = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-lamp_pin_mapping = {
-    1: DEFAULT_PINS[0],
-    2: DEFAULT_PINS[1],
-}
+lamp_pin_mapping = {i: DEFAULT_PINS[i-1] for i in range(1, 10)}
 
 @app.route('/')
 def index():
