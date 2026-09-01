@@ -1,8 +1,7 @@
 # Dimmer — LED Lighting Controller
 
 Firmware for a controllable LED lighting unit, built to keep illumination constant and
-reproducible across image acquisitions. Developed at Fraunhofer IPK as part of a camera-based
-inspection setup.
+reproducible across image acquisitions.
 
 ## Why
 
